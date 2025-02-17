@@ -24,7 +24,7 @@
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
-from qgis.core import QgsProject, QgsVectorLayer,QgsTemplate    
+from qgis.core import QgsProject, QgsVectorLayer    
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -51,6 +51,7 @@ class Excel2Map:
         self.plugin_dir = os.path.dirname(__file__)
         # initialize locale
         locale = QSettings().value('locale/userLocale')[0:2]
+        print(locale)
         locale_path = os.path.join(
             self.plugin_dir,
             'i18n',
@@ -181,6 +182,44 @@ class Excel2Map:
                 action)
             self.iface.removeToolBarIcon(action)
 
+    def load_geopackage_project(self, geopackage_path, project_name):
+        """Load a QGIS project from a geopackage into the current QGIS session.
+
+        :param geopackage_path: Path to the geopackage file.
+        :type geopackage_path: str
+
+        :param project_name: Name of the QGIS project to load.
+        :type project_name: str
+        """
+        if not os.path.exists(geopackage_path):
+            print(f"El archivo {geopackage_path} no existe.")
+            return
+
+        uri = f"geopackage='{geopackage_path}' project_name='{project_name}' (geom) sql="
+        QgsProject.instance().addMapLayer(QgsVectorLayer(uri,project_name,"geopackage"))
+        project = QgsProject.instance()
+        print(dir(project))
+
+        if not project.isDirty():
+            print(f"Proyecto {project_name} cargado exitosamente desde {geopackage_path}.")
+        else:
+            print(f"No se pudo cargar el proyecto {project_name} del geopackage.")
+
+    def load_qgz_project(self, project_path):
+        """Load a QGIS project from a .qgz file into the current QGIS session.
+
+        :param project_path: Path to the .qgz file.
+        :type project_path: str
+        """
+        if not os.path.exists(project_path):
+            print(f"El archivo {project_path} no existe.")
+            return
+
+        project = QgsProject.instance()
+        if project.read(project_path):
+            print(f"Proyecto {project_path} cargado exitosamente del Geopackage Tempaltes.")
+        else:
+            print(f"No se pudo cargar el proyecto {project_path}.")
 
     def run(self):
         """Run method that performs all the real work"""
@@ -193,32 +232,12 @@ class Excel2Map:
         else:
             print("first start FALSO")
 
-        print(dir(self.dlg))
-
-
+        print(os.getcwd())
         # show the dialog
         self.dlg.show()
-        # Run the dialog event loop
-        result = self.dlg.exec_()
-        # See if OK was pressed
-        if result:
-           print("PRESIONO BOTON ACEPTAR")
-           self.dlg.destroyed()
+        #self.load_geopackage_project(f"{self.plugin_dir}/TemplateQgis_3_34_2.gpkg", 'MapaINEGIpkg_3_34_final')
+        self.load_qgz_project(f"{self.plugin_dir}/MapaINEGI.qgz")
+        if result := self.dlg.exec_():
+            print("PRESIONO BOTON ACEPTAR")
         else:
             print("PRESIONO CANCELAR")
-    
-    
-    def load_geopackage(self):
-        """Loads a GeoPackage into QGIS."""
-        # Replace 'path/to/your/geopackage.gpkg' with the actual path to your GeoPackage
-        geopackage_path = 'path/to/your/geopackage.gpkg'  
-        layer_name = 'your_layer_name'  # Replace with the name of the layer inside the GeoPackage
-
-        uri = f"dbname='{geopackage_path}' table='{layer_name}' (geom) sql="
-        vlayer = QgsVectorLayer(uri, layer_name, "postgres")  # Use "postgres" as the provider
-
-        if vlayer.isValid():
-            QgsProject.instance().addMapLayer(vlayer)
-            print("GeoPackage loaded successfully!")
-        else:
-            print("Failed to load GeoPackage!")

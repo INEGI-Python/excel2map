@@ -70,6 +70,9 @@ background-color: rgb(230, 229, 235);</string>
    <property name="contextMenuPolicy">
     <enum>Qt::DefaultContextMenu</enum>
    </property>
+   <property name="accessibleName">
+    <string>selectExcel</string>
+   </property>
    <property name="styleSheet">
     <string notr="true">border-color: rgb(0, 0, 0);
 border-bottom-color: rgb(0,0, 255);
@@ -89,20 +92,17 @@ color: rgb(0,0,0);</string>
     <string>*.xlsx *.xls</string>
    </property>
   </widget>
-  <widget class="QCommandLinkButton" name="commandLinkButton">
+  <widget class="QgsMapLayerComboBox" name="mMapLayerComboBox">
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>10</y>
-     <width>185</width>
-     <height>41</height>
+     <y>140</y>
+     <width>241</width>
+     <height>27</height>
     </rect>
    </property>
-   <property name="text">
-    <string>Cargar Plantilla</string>
-   </property>
-   <property name="checkable">
-    <bool>false</bool>
+   <property name="insertPolicy">
+    <enum>QComboBox::InsertAtBottom</enum>
    </property>
   </widget>
  </widget>
@@ -111,6 +111,11 @@ color: rgb(0,0,0);</string>
    <class>QgsFileWidget</class>
    <extends>QWidget</extends>
    <header>qgsfilewidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>QgsMapLayerComboBox</class>
+   <extends>QComboBox</extends>
+   <header>qgsmaplayercombobox.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
@@ -164,18 +169,18 @@ color: rgb(0,0,0);</string>
    </hints>
   </connection>
   <connection>
-   <sender>commandLinkButton</sender>
-   <signal>clicked()</signal>
-   <receiver>commandLinkButton</receiver>
-   <slot>deleteLater()</slot>
+   <sender>mQgsFileWidget</sender>
+   <signal>fileChanged(QString)</signal>
+   <receiver>mMapLayerComboBox</receiver>
+   <slot>setCurrentText(QString)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>102</x>
-     <y>30</y>
+     <x>195</x>
+     <y>93</y>
     </hint>
     <hint type="destinationlabel">
-     <x>102</x>
-     <y>30</y>
+     <x>130</x>
+     <y>153</y>
     </hint>
    </hints>
   </connection>

@@ -2,4 +2,8 @@
     <qresource prefix="/plugins/excel2map" >
         <file>icon.png</file>
     </qresource>
+
+    <qresource prefix="/plugins/excel2map" >
+        <file>MapaINEGI.qgz</file>
+    </qresource>
 </RCC>
