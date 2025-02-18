@@ -22,9 +22,11 @@
  ***************************************************************************/
 """
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
+from qgis.gui import QgsMessageBar
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction
-from qgis.core import QgsProject, QgsVectorLayer    
+from qgis.PyQt.QtWidgets import QAction,QMessageBox
+from qgis.core import  QgsProject, QgsVectorLayer,Qgis
+
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -51,7 +53,6 @@ class Excel2Map:
         self.plugin_dir = os.path.dirname(__file__)
         # initialize locale
         locale = QSettings().value('locale/userLocale')[0:2]
-        print(locale)
         locale_path = os.path.join(
             self.plugin_dir,
             'i18n',
@@ -182,47 +183,47 @@ class Excel2Map:
                 action)
             self.iface.removeToolBarIcon(action)
 
-    def load_geopackage_project(self, geopackage_path, project_name):
-        """Load a QGIS project from a geopackage into the current QGIS session.
-
-        :param geopackage_path: Path to the geopackage file.
-        :type geopackage_path: str
-
-        :param project_name: Name of the QGIS project to load.
-        :type project_name: str
-        """
-        if not os.path.exists(geopackage_path):
-            print(f"El archivo {geopackage_path} no existe.")
-            return
-
-        uri = f"geopackage='{geopackage_path}' project_name='{project_name}' (geom) sql="
-        QgsProject.instance().addMapLayer(QgsVectorLayer(uri,project_name,"geopackage"))
-        project = QgsProject.instance()
-        print(dir(project))
-
-        if not project.isDirty():
-            print(f"Proyecto {project_name} cargado exitosamente desde {geopackage_path}.")
-        else:
-            print(f"No se pudo cargar el proyecto {project_name} del geopackage.")
 
     def load_qgz_project(self, project_path):
-        """Load a QGIS project from a .qgz file into the current QGIS session.
-
-        :param project_path: Path to the .qgz file.
-        :type project_path: str
-        """
         if not os.path.exists(project_path):
-            print(f"El archivo {project_path} no existe.")
+            self.iface.messageBar().pushMessage("INEGI",f"El proyecto {project_path} no existe.",Qgis.Critical,5)
             return
-
         project = QgsProject.instance()
         if project.read(project_path):
-            print(f"Proyecto {project_path} cargado exitosamente del Geopackage Tempaltes.")
+            self.iface.messageBar().pushMessage("INEGI",f"Proyecto {project_path}  cargado Satisfactoriamente",Qgis.Info,5)
         else:
-            print(f"No se pudo cargar el proyecto {project_path}.")
+            self.iface.messageBar().pushMessage("INEGI",f"Ocurrio un error al cargar el proyecto {project_path}.  Contacte  al adminsitrador",Qgis.Critical,5)
+
 
     def run(self):
         """Run method that performs all the real work"""
+        def validar(file):
+            if file.split(".")[1] in ["xls","xlsx"]:
+                import pandas as pan
+                ex = pan.read_excel(file,index_col=None,header=None)
+                print(ex)
+                self.dlg.respExcel.setText(ex.to_string())
+                self.iface.messageBar().pushMessage("Cargando Excel","Los  datos fueron cargados satisfactoriamente",Qgis.Info,10)
+                self.dlg.Datos.setEnabled(True)
+            else:
+                self.iface.messageBar().pushMessage("Cargando Excel","El archivo no es tipo Excel",Qgis.Critical,10)
+
+        def actDat():
+            newcomp =  self.iface.createNewComposer()
+            newcomp.composition().loadFromTemplate("Escala 1:6000000")
+            map_settings = self.iface.mapCanvas().mapSettings()
+            print(map_settings)
+            project = QgsProject.instance()
+            c = QgsComposition(project)
+            c.loadFromTemplate("Escala 1:6000000")
+            view = self.iface.openComposer(c)
+
+
+
+            print(dir(view))
+
+
+
 
         # Create the dialog with elements (after translation) and keep reference
         # Only create GUI ONCE in callback, so that it will only load when the plugin is started
@@ -230,13 +231,14 @@ class Excel2Map:
             self.first_start = False
             self.dlg = Excel2MapDialog()
         else:
-            print("first start FALSO")
-
-        print(os.getcwd())
+           self.iface.messageBar().pushMessage("INEGI","Esta herramienta ya se habia abierto anteriormente",Qgis.Warning,8)
         # show the dialog
         self.dlg.show()
         #self.load_geopackage_project(f"{self.plugin_dir}/TemplateQgis_3_34_2.gpkg", 'MapaINEGIpkg_3_34_final')
         self.load_qgz_project(f"{self.plugin_dir}/MapaINEGI.qgz")
+
+        self.dlg.mQgsFileWidget.fileChanged.connect(validar)
+        self.dlg.actualizarDatos.pressed.connect(actDat)
         if result := self.dlg.exec_():
             print("PRESIONO BOTON ACEPTAR")
         else:
