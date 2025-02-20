@@ -231,11 +231,11 @@ class Excel2Map:
             self.first_start = False
             self.dlg = Excel2MapDialog()
         else:
-           self.iface.messageBar().pushMessage("INEGI","Esta herramienta ya se habia abierto anteriormente",Qgis.Warning,8)
+            self.iface.messageBar().pushMessage("INEGI","Esta herramienta ya se habia abierto anteriormente",Qgis.Warning,8)
         # show the dialog
         self.dlg.show()
         #self.load_geopackage_project(f"{self.plugin_dir}/TemplateQgis_3_34_2.gpkg", 'MapaINEGIpkg_3_34_final')
-        self.load_qgz_project(f"{self.plugin_dir}/MapaINEGI.qgz")
+        self.load_qgz_project(f"{self.plugin_dir}/Plantilla_3_34_final_2.qgz")
 
         self.dlg.mQgsFileWidget.fileChanged.connect(validar)
         self.dlg.actualizarDatos.pressed.connect(actDat)
