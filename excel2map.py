@@ -25,7 +25,7 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.gui import QgsMessageBar
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction,QMessageBox
-from qgis.core import  QgsProject, QgsVectorLayer,Qgis
+from qgis.core import  QgsProject, QgsVectorLayer, QgsLayoutExporter, Qgis
 
 
 # Initialize Qt resources from file resources.py
@@ -209,18 +209,23 @@ class Excel2Map:
                 self.iface.messageBar().pushMessage("Cargando Excel","El archivo no es tipo Excel",Qgis.Critical,10)
 
         def actDat():
-            newcomp =  self.iface.createNewComposer()
-            newcomp.composition().loadFromTemplate("Escala 1:6000000")
-            map_settings = self.iface.mapCanvas().mapSettings()
-            print(map_settings)
             project = QgsProject.instance()
-            c = QgsComposition(project)
-            c.loadFromTemplate("Escala 1:6000000")
-            view = self.iface.openComposer(c)
-
-
-
-            print(dir(view))
+            layout_manager = project.layoutManager()
+            layouts_list = layout_manager.printLayouts()
+            print(layouts_list)
+            if layouts_list:
+                layout = layouts_list[0]
+                print(dir(layout))
+                layout.variablesChanged()
+                exporter = QgsLayoutExporter(layout)
+                export_path = os.path.join(self.plugin_dir, "map_composition.pdf")
+                result = exporter.exportToPdf(export_path, QgsLayoutExporter.PdfExportSettings())
+                if result == QgsLayoutExporter.Success:
+                    self.iface.messageBar().pushMessage("INEGI", "Mapa exportado satisfactoriamente a PDF", Qgis.Info, 5)
+                else:
+                    self.iface.messageBar().pushMessage("INEGI", "Error al exportar el mapa a PDF", Qgis.Critical, 5)
+            else:
+                self.iface.messageBar().pushMessage("INEGI", "No se encontró ninguna composición de mapa", Qgis.Warning, 5)
 
 
 
